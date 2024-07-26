@@ -1,0 +1,93 @@
+<%= form_with(model: event, id: 'event-form') do |form| %>
+  <% if event.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(event.errors.count, "error") %> prohibited this event from being saved:</h2>
+      <ul>
+        <% event.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :title, style: "display: block" %>
+    <%= form.text_field :title, class: "form-control", placeholder: "Title", id: "event_title" %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :date, style: "display: block" %>
+    <%= form.date_field :date, class: "form-control", id: "event_date" %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :start_time, style: "display: block" %>
+    <%= form.time_field :start_time, class: "form-control", id: "event_start_time", value: event.start_time.present? ? event.start_time.strftime("%H:%M") : '09:00' %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :end_time, style: "display: block" %>
+    <%= form.time_field :end_time, class: "form-control", id: "event_end_time", value: event.end_time.present? ? event.end_time.strftime("%H:%M") : '17:00' %>
+  </div>
+
+  <br/>
+  <div>
+    <%= form.submit class: 'btn btn-primary' %>
+  </div>
+<% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const startDate = urlParams.get('start');
+    const endDate = urlParams.get('end');
+
+    const today = new Date().toISOString().split('T')[0]; 
+
+    // Set the default date or adjust based on user option
+    const dateInput = document.getElementById('event_date');
+    const isEdit = document.getElementById('event_title').value !== ''; // Check if it's an edit
+
+    if (!isEdit) {
+      // For new events
+      if (!startDate && !endDate) {
+        dateInput.value = today;
+      } else if (startDate) {
+        const start = new Date(startDate);
+        dateInput.value = start.toISOString().split('T')[0];
+      } else if (endDate) {
+        const end = new Date(endDate);
+        dateInput.value = end.toISOString().split('T')[0];
+      }
+    } else {
+      // For editing existing events
+      dateInput.value = document.getElementById('event_date').value;
+    }
+  });
+
+  // Form validation
+  document.getElementById('event-form').addEventListener('submit', function(event) {
+    const title = document.getElementById('event_title').value.trim();
+    const date = document.getElementById('event_date').value;
+    const startTime = document.getElementById('event_start_time').value;
+    const endTime = document.getElementById('event_end_time').value;
+
+    // Check if any field is empty
+    if (!title || !date || !startTime || !endTime) {
+      event.preventDefault(); // Prevent form submission
+      alert('Please fill out all fields before submitting the form.');
+      setTimeout(() => location.reload(), 100); // Reload page after 0.5 seconds
+      return false;
+    }
+
+    // Check if end time is after start time
+    if (new Date(`${date}T${endTime}`) <= new Date(`${date}T${startTime}`)) {
+      event.preventDefault(); // Prevent form submission
+      alert('End time must be after start time.');
+      setTimeout(() => location.reload(), 100); // Reload page after 0.5 seconds
+      return false;
+    }
+    
+    return true;
+  });
+</script>
